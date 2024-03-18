@@ -1,6 +1,8 @@
 import React, { useState } from "react";
 import { useDispatch } from "react-redux";
-import { login } from "../../slices/loginSlice";
+import { login, loginPostAsync } from "../../slices/loginSlice";
+import { useNavigate } from "react-router-dom";
+import useCustomLogin from "../../hooks/useCustomLogin";
 
 const initState = {
   email: "",
@@ -10,7 +12,7 @@ const initState = {
 function LoginComponent(props) {
   const [loginParam, setLoginParam] = useState({ ...initState });
 
-  const dispatch = useDispatch();
+  const { doLogin, moveToPath } = useCustomLogin();
 
   const handleChange = (e) => {
     loginParam[e.target.name] = e.target.value;
@@ -19,7 +21,23 @@ function LoginComponent(props) {
   };
 
   const handleClikeLogin = (e) => {
-    dispatch(login(loginParam));
+    // dispatch(login(loginParam));
+    // dispatch(loginPostAsync(loginParam))
+    //   .unwrap()
+    //   .then((data) => {
+    //     if (data.error) {
+    //       alert("이메일과 패스워드를 확인해 주세요");
+    //     } else {
+    //       alert("로그인 성공");
+    //       navigate({ pathname: "/" }, { replace: true });
+    //     }
+    doLogin(loginParam).then((data) => {
+      if (data.error) {
+        alert("이메일과 패스워드를 확인해 주세요");
+      } else {
+        moveToPath("/");
+      }
+    });
   };
 
   return (
