@@ -30,7 +30,6 @@ const beforeReq = (config) => {
 
   const { AccessToken } = memberInfo;
 
-  console.log("accessToken = " + AccessToken);
   config.headers.Authorization = `Bearer ${AccessToken}`;
 
   return config;
