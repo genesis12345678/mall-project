@@ -5,6 +5,7 @@ import FetchingModal from "../common/FetchingModal";
 import { API_SERVER_HOST } from "../../api/TodoApi";
 import useCustomMove from "../../hooks/UseCustomMove";
 import ResultModal from "../common/ResultModal";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
 const initState = {
   pno: 0,
@@ -24,15 +25,25 @@ function ModifyComponent({ pno }) {
 
   const { moveToList, moveToRead } = useCustomMove();
 
-  const uploadRef = useRef();
+  const delMutation = useMutation({ mutationFn: (pno) => deleteOne(pno) });
+
+  const modMutation = useMutation({
+    mutationFn: (product) => putOne(pno, product),
+  });
+
+  const query = useQuery({
+    queryKey: ["products", pno],
+    queryFn: () => getOne(pno),
+    staleTime: Infinity,
+  });
 
   useEffect(() => {
-    setFetching(true);
-    getOne(pno).then((data) => {
-      setProduct(data);
-      setFetching(false);
-    });
-  }, [pno]);
+    if (query.isSuccess) {
+      setProduct(query.data);
+    }
+  }, [pno, query.data, query.isSuccess]);
+
+  const uploadRef = useRef();
 
   const handleChangeProduct = (e) => {
     product[e.target.name] = e.target.value;
@@ -66,41 +77,43 @@ function ModifyComponent({ pno }) {
 
     setFetching(true);
 
-    putOne(pno, formData).then((data) => {
-      setResult("Modified");
-      setFetching(false);
-    });
+    modMutation.mutate(formData);
+
+    // putOne(pno, formData).then((data) => {
+    //   setResult("Modified");
+    //   setFetching(false);
+    // });
   };
 
   const handleClickDelete = () => {
-    setFetching(true);
-    deleteOne(pno).then((data) => {
-      setResult("Deleted");
-      setFetching(false);
-    });
+    delMutation.mutate(pno);
   };
+
+  const queryClient = useQueryClient();
+
   const closeModal = () => {
-    switch (result) {
-      case "Modified":
-        moveToRead(pno);
-        break;
+    queryClient.invalidateQueries(["products", pno]);
+    queryClient.invalidateQueries("products/list");
 
-      case "Deleted":
-        moveToList({ page: 1 });
-        break;
+    if (delMutation.isSuccess) {
+      moveToList();
     }
-
-    setResult(null);
+    if (modMutation.isSuccess) {
+      moveToRead(pno);
+    }
   };
 
   return (
     <div className="border-2 border-sky-200 mt-10 m-2 p-4">
-      {fetching ? <FetchingModal /> : <></>}
-
-      {result ? (
+      {query.isFetching || delMutation.isPending || modMutation.isPending ? (
+        <FetchingModal />
+      ) : (
+        <></>
+      )}
+      {delMutation.isSuccess || modMutation.isSuccess ? (
         <ResultModal
-          title={`${result}`}
-          content={"처리되었습니다."}
+          title={"처리 결과"}
+          content={"정상적으로 처리되었습니다."}
           callbackFn={closeModal}
         ></ResultModal>
       ) : (
