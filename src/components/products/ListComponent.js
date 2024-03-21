@@ -32,7 +32,7 @@ function ListComponent(props) {
   const { data, isFetching, error, isError } = useQuery({
     queryKey: ["products/list", { page, size, refresh }],
     queryFn: () => getList({ page, size }),
-    staleTime: 1000 * 5,
+    staleTime: 1000 * 60,
   });
 
   // const queryClient = useQueryClient();
