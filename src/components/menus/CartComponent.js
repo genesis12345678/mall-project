@@ -5,17 +5,21 @@ import { useEffect } from "react";
 import { getCartItemsAsync } from "../../slices/cartSlice";
 import useCustomCart from "../../hooks/useCustomCart";
 import CartItemComponent from "../cart/CartItemComponent";
+import { useRecoilValue } from "recoil";
+import { cartTotalState } from "../../atoms/cartState";
 
 function CartComponent(props) {
   const { isLogin, loginState } = useCustomLogin();
 
-  const { refreshCart, cartItems, changeCart } = useCustomCart();
+  const { cartItems, changeCart } = useCustomCart();
 
-  useEffect(() => {
-    if (isLogin) {
-      refreshCart();
-    }
-  }, [isLogin]);
+  const totalValue = useRecoilValue(cartTotalState);
+
+  //   useEffect(() => {
+  //     if (isLogin) {
+  //       refreshCart();
+  //     }
+  //   }, [isLogin]);
 
   return (
     <div className="w-full">
@@ -42,6 +46,11 @@ function CartComponent(props) {
                 />
               ))}
             </ul>
+          </div>
+          <div>
+            <div className="text-2xl text-right font-extrabold">
+              TOTAL : {totalValue}
+            </div>
           </div>
         </div>
       ) : (
